@@ -10,10 +10,11 @@
 | **3.** | [Comments](#comments) |  |
 | **4.** | [Oracle Built in Types](#oracle-built-in-data-types) | [Character data types](#character-data-types),<br>[Number data types](#number-data-types),<br>[Long & raw data types](#long--raw-data-types),<br>[Date time data types](#date-time-data-types) |
 | **5.** | [Structured Types - User Defined](#structured-types---user-defined) | [Retrieve all user types](#retrieve-all-user-types),<br>[Drop a type](#drop-a-type),<br>[Declare user defined type](#declare-user-defined-type),<br>[Declaring types with a reference field](#declaring-types-with-a-reference-field),<br>[Methods](#methods),<br>[Access methods](#access-methods),<br>[Inheritance & hierarchy](#inheritance--hierarchy),<br>[Access components of a composite attribute](#access-components-of-a-composite-attribute),<br>[Alter types](#alter-types) |
-| **6.** | [Tables](#tables) | [Retrieve all user tables](#retrieve-all-user-tables),<br>[Retrieve table attribute details](#retrieve-table-attribute-details),<br>[Retrieve object identifier reference](#retrieve-object-identifier-reference),<br>[Drop a table](#drop-a-table),<br>[Create tables](#create-tables),<br>[Create table of user objects](#create-table-of-user-objects),<br>[Create tables with reference columns](#create-tables-with-reference-columns),<br>[Inserting into a table](#inserting-into-a-table),<br>[Alter tables](#alter-tables) |
+| **6.** | [Tables](#tables) | [Retrieve all user tables](#retrieve-all-user-tables),<br>[Retrieve table attribute details](#retrieve-table-attribute-details),<br>[Retrieve object identifier reference](#retrieve-object-identifier-reference),<br>[Drop a table](#drop-a-table),<br>[Create tables](#create-tables),<br>[Create table of user objects](#create-table-of-user-objects),<br>[Create tables with reference columns](#create-tables-with-reference-columns),<br>[Inserting into a table](#inserting-into-a-table),<br>[Update a table record](#update-a-table-record),<br>[Alter tables](#alter-tables) |
 | **7.** | [Constraints](#constraints) | [Constraint types](#constraint-types),<br>[Using constraints](#using-constraints) |
-| **8.** | [Functions](#functions) | [Retrieve all user functions](#retrieve-all-user-functions),<br>[Create functions](#create-functions),<br>[Access functions](#access-functions),<br>[Ref() function](#ref-function),<br>[Value() function](#value-function),<br>[Deref() function](#deref-function) |
-| **9.** | [Oracle Reserved Words](#oracle-reserved-words) ||
+| **8.** | [Collections](#collections) | [Define varray](#define-varray),<br>[Insert into varray](#insert-into-varray),<br>[Define a nested table](#define-a-nested-table),<br>[Query nested tables](#query-nested-tables) |
+| **9.** | [Functions](#functions) | [Retrieve all user functions](#retrieve-all-user-functions),<br>[Create functions](#create-functions),<br>[Access functions](#access-functions),<br>[Ref() function](#ref-function),<br>[Value() function](#value-function),<br>[Deref() function](#deref-function),<br>[Table() function](#table-function) |
+| **10.** | [Oracle Reserved Words](#oracle-reserved-words) ||
 
 <br>
 
@@ -41,8 +42,9 @@
 ### <u>Notes</u>  
 
 * When using Oracle and SQLDeveloper, it can be good practice to **prefix types and tables** so all user defined objects are grouped together (try prefixing with initials and underscore `ad_name`)  
-* `/` is a command delimeter and allows multiple blocks to be executed sequentially. **Add after each block statement/queries**  
+* `/` is a command delimeter and allows multiple blocks to be executed sequentially. **Add after each block statement/queries**. NOTE however that this can rerun the previous statement and so **SHOULD NOT** be used **following <u>insert</u> statements**  
 * Careful using quotation marks. `'` is allowed, `‘` and `"` are not  
+
 
 [⬆ Table of Contents ⬆](#oracle-notes)    
 
@@ -52,6 +54,9 @@
 
 `--` - Single line comment  
 `/* */` - Multi line comment  
+
+
+[⬆ Table of Contents ⬆](#oracle-notes)    
 
 ---  
 
@@ -73,6 +78,7 @@
 
 ##### Date time data types:  
 ![Date time types](./img/datetime-types.png)  
+
 
 [⬆ Table of Contents ⬆](#oracle-notes)    
 
@@ -108,7 +114,7 @@ Oracle, object-oriented models and object-relational models allow for composite 
 `/`  
 * Multiple attributes can be specified, last should not be followed by a comma (unless followed by member functions)   
 * **Attributes can be composite** (i.e. another user defined type defined with multiple components)  
-* `MEMBER FUNCTION` is a type method, note the **definition should be separate from the type definition**. They are only declared in the type definition. [See here](#methods). **These are member methods** and operate on **instance-specific data** (invoked on individual instances). <u>Prefix with `STATIC`</u> to declare as a **static method** operate at **class level** (invoked on class directly)  
+* `MEMBER FUNCTION` is a type method, note the **definition should be separate from the type definition**. They are only declared in the type definition. [See methods](#methods). **These are member methods** and operate on **instance-specific data** (invoked on individual instances). <u>Prefix with `STATIC`</u> to declare as a **static method** operate at **class level** (invoked on class directly)  
 * **Note, method datatypes** are STRING, REAL and NUMBER (not INT or VARCHAR)  
 * `FINAL` is not required:  
   * `FINAL` **does not allow subtypes** (other types cannot inherit from declared type)  
@@ -126,6 +132,7 @@ Oracle, object-oriented models and object-relational models allow for composite 
 * The `REF` attribute is a logical "pointer" to a **row object** (tuple)  
 * This points to the object types, **not** the relevant tables  
 * All other parts of declaring the type are the same as above ([declaring user-type](#declare-user-defined-type))  
+* [See create table with reference columns](#create-tables-with-reference-columns) to use with tables  
 
 <br>  
 
@@ -213,8 +220,8 @@ Oracle, object-oriented models and object-relational models allow for composite 
   * `MODIFY MEMBER FUNCTION` method_name `RETURN` TYPE - change return type of existing method  
   * `DROP MEMBER FUNCTION` method_name - drop method  
 
-[⬆ Table of Contents ⬆](#oracle-notes)    
 
+[⬆ Table of Contents ⬆](#oracle-notes)    
 
 ---  
 
@@ -276,10 +283,12 @@ Oracle, object-oriented models and object-relational models allow for composite 
 `/`  
 * This makes references behave like **foreign keys**  
 * `SCOPE IS` is used to restrict the references to point at the **actual object table**. Without this, the reference can be any table of the TYPE  
+* [See declaring types with a reference field](#declaring-types-with-a-reference-field) to create reference types  
 * For object-relational model where there are complex object types and relationships between them (inheritance, subtype relationships, or multiple levels of composition), using `REF` may be more appropriate than the foreign key constraint as it provides a more natural representation of these relationships  
 * `REF` **does not enforce referential integrity directly** (like foreign key does). It is up to the application or database logic to ensure that the references stored in the `REF` column are valid  
 * `REF` **does not have built-in support for cascading actions**. Any cascading behavior must be implemented manually using triggers or application logic  
-* `REF` **allows** you to **query related data across tables** ([see functions below](#ref-function)). While with foreign keys, `JOIN` would typically be used  
+* `REF` **allows** you to **query related data across tables** and **insert data** ([see functions below](#ref-function)). While with foreign keys, `JOIN` would typically be used  
+* Access value tuples of a reference field using [deref() function](#deref-function) - However use **dot notation** and NOT `deref()` when accessing **<u>specific</u> parts** of a tuple  
 
 <br>  
 
@@ -290,12 +299,21 @@ Oracle, object-oriented models and object-relational models allow for composite 
 &emsp;built_in_value1`,`  
 &emsp;built_in_value2  
 `);`  
-`/`  
-* User-defined types require using the constructor syntax (**type name and parentheses**)  
+* **DO NOT USE** `/` after insert statement as can rerun and insert twice  
+* [User-defined types](#declare-user-defined-type) require using the constructor syntax (**type name and parentheses**)  
 * Built in values can be passed directly  
 * Values **must be passed in order** corresponding to order of columns in the table  
 * `Ref()` **function** can be used to insert data into a table ([see ref function](#ref-function))  
+* When tables are generated with **<u>references</u>**, `SELECT *` will return the table of **references** not the instances  
 * Carful using quotations `'` is allowed, `‘` and `"` are not  
+
+<br>  
+
+##### Update a table record:  
+`UPDATE` Table_name  
+`SET` Attribute1 `=` new_value, Attribute2 `=` new_value  
+`WHERE` condition;  
+* Update specific records in a table  
 
 <br>  
 
@@ -320,8 +338,8 @@ OPTION`;`
   * `ENABLE CONSTRAINT` constraint_name - enable constraint  
   * `DISABLE CONSTRAINT` constraint_name - disable constraint  
 
-[⬆ Table of Contents ⬆](#oracle-notes)    
 
+[⬆ Table of Contents ⬆](#oracle-notes)    
 
 ---  
 
@@ -350,8 +368,77 @@ OPTION`;`
 * `CONSTRAINT` keyword is used when naming a constraint, otherwise Oracle will automatically generate a name  
 * `CONSTRAINT` keyword **must** be used if wanting to define a single constraint on multiple columns (e.g. composite primary key)  
 
+
 [⬆ Table of Contents ⬆](#oracle-notes)    
 
+---  
+
+### <u>Collections</u>  
+
+* Oracle supports two collection data types:  
+  * [Varrays](#define-varray) - Variable length **ordered** lists with **fixed upper limit**  
+  * [Nested tables](#define-a-nested-table) - Tables within tables, **unordered** lists with **<u>no</u> fixed upper limit**  
+* A type definition must first be created to use either collection  
+* Both can be applied repeatedly and form 'multi-level collection types' 
+* It is possible to use references within nested tables, but **not recommended**  
+
+
+<br>  
+
+##### Define varray:  
+`CREATE TYPE` Type_name `AS VARRAY(`SIZE`) OF` TYPE`;`  
+`/`  
+* A **maximum size** of the array must be specified when defined, but **not changed later**  
+* Varrays are always **manipulated as a <u>single value</u>**
+
+<br>  
+
+##### Insert into varray:  
+`INSERT INTO` Table_name  
+`VALUES(`  
+&emsp;Varray_name`(`value1`,` value2`,` ...`)`  
+`);`  
+* **DO NOT USE** `/` after insert statement as can rerun and insert twice  
+* Assumes a table has been [created](#create-tables) with a varray column  
+
+<br>  
+
+##### Define a nested table:  
+`CREATE TYPE` Nested_table_type_name `AS TABLE OF` TYPE`;`  
+`/`  
+
+`CREATE TABLE` Outer_Table_name`)`  
+&emsp;other_columns_defined...,  
+&emsp;Nested_table_column_name Nested_table_type_name  
+`)`  
+`NESTED TABLE` Nested_table_column_name `STORE AS` Nested_table_storage_name`;`  
+`/`  
+* The type must first be created before creating a nested table as shown  
+* Allows **<u>no</u> upper limit** on values stored  
+* `Outer_table_name` is the name of the outer table as created in the [normal way](#create-tables)  
+* `Nested_table_storage_name` is the name Oracle uses to store the table internally. It is not possible to directly interact with it, but giving it a storage name helps for optimisation of storage and provides flexibility allowing parameters to be changed and data migrated  
+* It is possible to use references within nested tables, but **not recommended**  
+
+<br>  
+
+##### Insert into nested table:  
+`INSERT INTO` Outer_table_name  
+`VALUES (`  
+&emsp;Nested_table_type_name`(`value1`,`value2`,`...`)`  
+`);`  
+* **DO NOT USE** `/` after insert statement as can rerun and insert twice  
+* Note the **type name** is used here to insert (not the storage name or column name)  
+
+<br>  
+
+##### Query nested tables:  
+`SELECT * FROM` Outer_table_name`;`  
+`/`  
+* Selects **ALL data and types** in a **nested format**  
+* [Table()](#table-function) function can be used to select **only data** in an **un-nested format**  
+
+
+[⬆ Table of Contents ⬆](#oracle-notes)    
 
 ---  
 
@@ -387,35 +474,61 @@ OPTION`;`
 
 ##### Access functions:  
 `SELECT` function_name`(`argument`)` `INTO` variable `FROM dual;`  
+`/`  
 * Functions can be accessed by calling directly inside of functions, alternatively, use as shown above  
 * `INTO` statement is optional and assigns retrieved value into the variable  
 
 <br>  
 
 ##### Ref() function:  
-
-* Takes its **argument** as a **table alias** associated with a row of an object table  
-* **Returns** the **reference to that object**  
-* Mainly used for inserting data  
-* **QUERY RELATED DATA (to find related data)**  
-* **INSERT DATA**  
+`INSERT INTO` Ref_table_name  
+&emsp;`SELECT REF(`alias1`), REF(`alias2`)`  
+&emsp;`FROM` Obj_table1_name alias1`,` Obj_table2_name alias2  
+&emsp;`WHERE` alias1 condition  
+&emsp;`AND` alias2 condition`;`  
+* **DO NOT USE** `/` after insert statement as can rerun and insert twice  
+* Mainly used for inserting data. [See create tables with reference columns](#create-tables-with-reference-columns)  
+* Takes its **argument** as a **table alias** associated with a row of an **<u>object</u> table**  
+* When tables are generated with references, `SELECT *` will return the table of **references** not the instances  
+* Example shows inserting references into a reference table from two tables, but can be one (or more than two)  
+* **Returns** the **reference to that <u>object</u>**  
+* Can be used as a select statement on its own to **return the references** of an object (or multiple objects). In this case, DO use `/` after statement  
 
 <br>  
 
 ##### Value() function:  
-
-* Takes its **argument** as a **table alias** associated with a row of an object table  
-* **Returns object instances stored in the table object**  
-* **QUERY TO FIND OBJECT INSTANCES IN A TABLE**  
-* **TRY SELECT * FROM TABLE WHERE...**  
+`SELECT VALUE(`alias`).`attribute  
+`FROM` Table_name alias  
+`WHERE` attribute condition`;`  
+`/`  
+* Takes its **argument** as a **table alias** associated with a row of an **<u>object</u> table**  
+* **Returns object instances** stored in the table object **as a tuple**  
+* `.attribute` is not required, but shown here for further easier access to object attributes  
+* Note can get a similar return using `SELECT * ...`, however`VALUE` returns as a **tuple** which is useful when you want to access the attributes of an object in a structured manner or when you want to use the object as a whole in an expression or function  
 
 <br>  
 
 ##### Deref() function:  
+`SELECT DEREF(`alias.reference_column1`).`attribute`, DEREF(`alias.reference_column2`)`  
+`FROM` Reference_table_name alias`;`  
+`/`  
+* Takes its **argument** as a [<u>reference</u>](#declaring-types-with-a-reference-field) to an object  
+* **Returns instance of object type** (**tuple** pointed to by a reference)  
+* Note if using with a reference table object with **more than one reference column**, will need to **specify which column** you want to deref with **dot notation**  
+* `.attribute` is not required, but shown here for further easier access to object attributes  
+* Use **dot notation** and NOT `deref()` when accessing **<u>specific</u> parts** of a tuple  
 
-* Takes its **argument** as a **reference** to an object  
-* **Returns instance of object type** (tuple pointed to by a reference)  
-* **QUERY**  
+<br>  
+
+##### Table() function:  
+`SELECT` outer_alias`.`column_name, nested_alias`.*`  
+`FROM` Outer_table_name outer_alias`, TABLE(`outer_alias`.`nested_table_column_name`)` nested_alias`;`  
+`/`  
+* Selects **only data** in an **un-nested format**  
+* It is shown here also retrieving data in the outer table that is not in the nested table  
+* [See define a nested table](#define-a-nested-table)  
+* `*` will return **all nested table** data  
+* `*` can be replaced with `COLUMN_VALUE` which will return **only the column** of data specified in `nested_table_column_name`  
 
 
 [⬆ Table of Contents ⬆](#oracle-notes)    
@@ -455,6 +568,7 @@ Below is the commonly recognised Oracle reserved words which cannot be used as i
 |UNION|UNIQUE|UPDATE|USER|
 |VALIDATE|VALUES|VARCHAR|VARCHAR2|
 |VIEW|WHENEVER|WHERE|WITH|  
+
 
 [⬆ Table of Contents ⬆](#oracle-notes)    
 
