@@ -12,9 +12,10 @@
 | **5.** | [Structured Types - User Defined](#structured-types---user-defined) | [Retrieve all user types](#retrieve-all-user-types),<br>[Drop a type](#drop-a-type),<br>[Declare user defined type](#declare-user-defined-type),<br>[Declaring types with a reference field](#declaring-types-with-a-reference-field),<br>[Methods](#methods),<br>[Access methods](#access-methods),<br>[Inheritance & hierarchy](#inheritance--hierarchy),<br>[Access components of a composite attribute](#access-components-of-a-composite-attribute),<br>[Alter types](#alter-types) |
 | **6.** | [Tables](#tables) | [Retrieve all user tables](#retrieve-all-user-tables),<br>[Retrieve table attribute details](#retrieve-table-attribute-details),<br>[Retrieve object identifier reference](#retrieve-object-identifier-reference),<br>[Drop a table](#drop-a-table),<br>[Create tables](#create-tables),<br>[Create table of user objects](#create-table-of-user-objects),<br>[Create tables with reference columns](#create-tables-with-reference-columns),<br>[Inserting into a table](#inserting-into-a-table),<br>[Update a table record](#update-a-table-record),<br>[Alter tables](#alter-tables) |
 | **7.** | [Constraints](#constraints) | [Constraint types](#constraint-types),<br>[Using constraints](#using-constraints) |
-| **8.** | [Collections](#collections) | [Define varray](#define-varray),<br>[Insert into varray](#insert-into-varray),<br>[Define a nested table](#define-a-nested-table),<br>[Query nested tables](#query-nested-tables) |
+| **8.** | [Collections](#collections) | [Define varray](#define-varray),<br>[Insert into varray](#insert-into-varray),<br>[Define a nested table](#define-a-nested-table),<br>[Query nested tables](#query-nested-tables),<br>[Drop nested tables](#drop-nested-tables) |
 | **9.** | [Functions](#functions) | [Retrieve all user functions](#retrieve-all-user-functions),<br>[Create functions](#create-functions),<br>[Access functions](#access-functions),<br>[Ref() function](#ref-function),<br>[Value() function](#value-function),<br>[Deref() function](#deref-function),<br>[Table() function](#table-function) |
-| **10.** | [Oracle Reserved Words](#oracle-reserved-words) ||
+| **10.** | [PL/SQL](#plsql) | [Different types of methods](#different-types-of-methods-in-context-of-user-defined-types),<br>[Printing with DBMS output](#priting-with-dbms_outputput_line),<br>[Triggers](#triggers) |
+| **11.** | [Oracle Reserved Words](#oracle-reserved-words) ||
 
 <br>
 
@@ -44,6 +45,7 @@
 * When using Oracle and SQLDeveloper, it can be good practice to **prefix types and tables** so all user defined objects are grouped together (try prefixing with initials and underscore `ad_name`)  
 * `/` is a command delimeter and allows multiple blocks to be executed sequentially. **Add after each block statement/queries**. NOTE however that this can rerun the previous statement and so **SHOULD NOT** be used **following <u>insert</u> statements**  
 * Careful using quotation marks. `'` is allowed, `‘` and `"` are not  
+* If using SQL developer, when dealing with references, may need to run as script (script with play button) rather than as a statement (just play button) to see the reference as an output as SQL developer may show values/instance as output otherwise  
 
 
 [⬆ Table of Contents ⬆](#oracle-notes)    
@@ -114,7 +116,8 @@ Oracle, object-oriented models and object-relational models allow for composite 
 `/`  
 * Multiple attributes can be specified, last should not be followed by a comma (unless followed by member functions)   
 * **Attributes can be composite** (i.e. another user defined type defined with multiple components)  
-* `MEMBER FUNCTION` is a type method, note the **definition should be separate from the type definition**. They are only declared in the type definition. [See methods](#methods). **These are member methods** and operate on **instance-specific data** (invoked on individual instances). <u>Prefix with `STATIC`</u> to declare as a **static method** operate at **class level** (invoked on class directly)  
+* `MEMBER FUNCTION` is part of PL/SQL. [See PL/SQL for more information on the different types of functions/procedures (`MEMBER FUNCTION` / `MAP MEMBER FUNCTION` / `MEMBER PROCEDURE`)](#plsql)
+* `MEMBER FUNCTION` is a type method, note the **definition should be separate from the type definition**. They are only declared in the type definition. [See methods for defining](#methods). **These are member methods** and operate on **instance-specific data** (invoked on individual instances). <u>Prefix with `STATIC`</u> to declare as a **static method** operate at **class level** (invoked on class directly)  
 * **Note, method datatypes** are STRING, REAL and NUMBER (not INT or VARCHAR)  
 * `FINAL` is not required:  
   * `FINAL` **does not allow subtypes** (other types cannot inherit from declared type)  
@@ -138,7 +141,7 @@ Oracle, object-oriented models and object-relational models allow for composite 
 
 ##### Methods:  
 `CREATE OR REPLACE TYPE BODY` Type_name `AS`  
-&emsp;`MEMBER FUNCTION` method_name `RETURN` RETURN_TYPE `IS`  
+&emsp;`MEMBER FUNCTION` method_name`(` param_name PARAM_TYPE`) RETURN` RETURN_TYPE `IS`  
 &emsp;variable_name TYPE`;`  
 &emsp;`BEGIN`  
 &emsp;`IF` self.Attribute = value `THEN`  
@@ -156,8 +159,11 @@ Oracle, object-oriented models and object-relational models allow for composite 
 `/`  
 * Methods should be **defined outside type declaration** ([but declared inside the type](#declare-user-defined-type) (or added later))  
 * `STATIC` methods are defined in the same way, but `MEMBER FUNCTION` should be prefixed with `STATIC`  
-* **Note, method datatypes** are STRING, REAL and NUMBER (not INT or VARCHAR)  
-* **Note** `=` is used for **comparison**, whereas `:=` is used for **assignment**  
+* [See PL/SQL for more information on the different types of functions/procedures (`MEMBER FUNCTION` / `MAP MEMBER FUNCTION` / `MEMBER PROCEDURE`)](#plsql)  
+* Parameters are optional  
+* `RETURN RETURN_TYPE` won't be required with `MEMBER PROCEDURE`  
+* **Method datatypes** can informally be used STRING, REAL and NUMBER (not INT or VARCHAR)....however **USE REGULAR SQL DATATYPES AND TEST**    
+* `=` is used for **comparison**, whereas `:=` is used for **assignment**  
 * `self.` is used to refer to **object instance**  
 * `!=` **does NOT work** in some databases, use `IS NOT NULL` or equivalent  
 * `if..else` blocks and `variables` are optional, and provided here for example  
@@ -437,6 +443,18 @@ OPTION`;`
 * Selects **ALL data and types** in a **nested format**  
 * [Table()](#table-function) function can be used to select **only data** in an **un-nested format**  
 
+<br>  
+
+##### Drop nested tables:  
+`DROP TABLE` Outer_parent_table_name`;`  
+`/`  
+`DROP TYPE` Nested_table_type_name`;`  
+`/`  
+`DROP TYPE` TYPE_used_in_nested_table`;` -- if required  
+`/`  
+* Drop outer parent table before dropping nested table and then type used in nested table if required  
+* The `nested_table_storage` will be dropped automatically when the `outer_parent_table` is dropped  
+
 
 [⬆ Table of Contents ⬆](#oracle-notes)    
 
@@ -492,6 +510,7 @@ OPTION`;`
 * When tables are generated with references, `SELECT *` will return the table of **references** not the instances  
 * Example shows inserting references into a reference table from two tables, but can be one (or more than two)  
 * **Returns** the **reference to that <u>object</u>**  
+* Note if using SQL developer, may need to run as script (script with play button) rather than as a statement (just play button) to see the reference as an output  
 * Can be used as a select statement on its own to **return the references** of an object (or multiple objects). In this case, DO use `/` after statement  
 
 <br>  
@@ -529,6 +548,131 @@ OPTION`;`
 * [See define a nested table](#define-a-nested-table)  
 * `*` will return **all nested table** data  
 * `*` can be replaced with `COLUMN_VALUE` which will return **only the column** of data specified in `nested_table_column_name`  
+
+
+[⬆ Table of Contents ⬆](#oracle-notes)    
+
+---  
+
+### <u>PL/SQL</u>  
+
+[Database PL/SQL language reference](https://docs.oracle.com/en/database/oracle/oracle-database/19/lnpls/index.html)
+[Triggers reference](https://docs.oracle.com/en/database/oracle/oracle-database/19/lnpls/plsql-triggers.html)  
+
+[Using PL/SQL with object types](https://docs.oracle.com/en/database/oracle/oracle-database/21/adobj/using-pl-sql-with--object-types.html)
+[Defining triggers for object types](https://docs.oracle.com/en/database/oracle/oracle-database/21/adobj/Sql-object-types-and-references.html#GUID-9DB2EE21-CB39-4CCB-B58D-B5C89129071C)
+* Oracles procedural language extension to SQL - can be considered superset  
+* Includes procedural language elements such as conditions and loops, allowing you to build complex logic within your database applications  
+* Almost any SQL statement can be used in PL/SQL program without any special pre-processing - exception: `CREATE TABLE` as PL/SQL code is compiled and cannot refer to objects that do not yet exist at compile time    
+* Provides better performance compared to executing SQL statements individually because it reduces network traffic by executing multiple SQL statements at once  
+* Supports error handling mechanisms, transactions, and flow control constructs  
+* [Methods defined in user-defined types](#methods) use PL/SQL constructs to define the procedural logic that operates on instances of that type  
+
+<br>  
+
+From within a PL/SQL block you can:  
+* Access attributes with dot notation  
+* Call constructors and methods  
+* Insert rows into a table  
+* Update and delete rows in an object table  
+* Update rows with [REF() function](#ref-function) similar to inserting  
+
+<br>  
+
+##### Different types of methods in context of user-defined types:  
+[See user defined type](#declare-user-defined-type) for declaration    
+[See methods for definition](#methods)  
+Note `=` is used for **comparison**, whereas `:=` is used for **assignment**  
+
+* `MEMBER FUNCTION`  
+  * Associated with a user-defined type that returns a value  
+  * Invoked on instances of the type and can access the attributes of the instance  
+  * Typically used to perform calculations, validations, or other operations that produce a result based on the state of the object  
+  * **Classic type of function**  
+
+* `MAP MEMBER FUNCTION`  
+  * When declaring a map member function, it should return a type that suits comparison logic  
+  * It will be automatically called when when using relational operators `<`, `<=`, `>` or performing implicit comparisons `DISTINCT`, `GROUP BY`, `UNION` and `ORDER BY` e.g.:  
+&emsp;`WHERE` TYPE(attribute) `=` TYPE(attribute) - method implementation could change how types / attributes are passed here  
+&emsp;Alternatively, call the [method directly](#access-methods) and have the method return a type that suits comparison logic, that way a specific instance can be aggregated by multiple values and the result can then be compared e.g.:  
+&emsp;`WHERE Point(1, 1).distance(VALUE(PointTable)) < 5;` - point is a user type and distance is the method that returns a number   
+  * **ALSO** a Special type of member function used in the context of nested table or varray types  
+  * Used to apply a transformation or operation to **each element of the collection** when performing operations such as `SELECT ... FROM TABLE`  
+
+* `MEMBER PROCEDURE`  
+  * Performs some action or operation but **does not return a value**  
+  *  Invoked on instances of the type and can access and modify the attributes of the instance  
+  * Typically used to perform operations that change the state of the object or perform side effects  
+  * There are special parameter modes when declaring a member procedure:
+&emsp;`MEMBER PROCEDURE` proc_name`(SELF IN OUT NOCOPY` parameter`) IS ...`  
+&emsp;`SELF` - refers to the current instance of the object on which the method is being invoked  
+&emsp;`IN` - indicates that the parameter object itself is being passed into the member procedure  
+&emsp;`OUT` - indicates that the parameter can be modified within the member procedure and the changes will be reflected in the calling environment  
+&emsp;`NOCOPY` - hints the compiler not to create a copy of the object when passing it to the procedure  
+    * If `SELF` is not declared, its parameter mode defaults to `IN OUT`. However, the default behavior does not include the `NOCOPY`. Because the value of the `IN OUT` actual parameter is copied into the corresponding parameter, the copying slows down execution when the parameters hold large data structures. For **performance reasons**, you may want to include `SELF IN OUT NOCOPY` when **passing a large object type** as a parameter  
+    * `SELF IN` can be declared without `OUT`, meaning any changes made to the attributes of the object within the procedure will not be reflected in the original object instance outside of the procedure  
+
+<br>  
+
+##### Priting with DBMS_OUTPUT.PUT_LINE:  
+`SET SERVEROUTPUT ON` OR in SQL Developer, go to `Menu View → dbms output`  
+
+Print text of values to console:  
+`DBMS_OUTPUT.PUT_LINE(`'some string message ' `||` obj.attribute `||` TO_CHAR(my_date, 'DD-MON-YYYY') `||` TO_CHAR(my_number) `)`  
+* Above shows example of printing to console and can be used in a member function  
+* Multiple put_line statements can be used in a function  
+* `||` concatenates strings  
+* Numbers and dates must be converted to chars as shown  
+* User-defined types may need to implement a method to convert instances of these types to strings. Often involves overriding the `TO_STRING()` method for custom types to return a string representation of the object  
+&emsp;Snippet example of a member function called `TO_STRING()`:  
+&emsp;`RETURN` '(' `|| TO_CHAR(`self.attribute1`) ||` ', ' `|| TO_CHAR(`self.attribute2`)` `||` ')'`;`  
+&emsp;- would return `(attribute1,attribute2)`  
+&emsp;- and then used:  
+&emsp;`DBMS_OUTPUT.PUT_LINE(`'A string message: ' `||` obj.TO_STRING`);`  
+
+<br>  
+
+##### Triggers:  
+* A mechanism that automatically executes a specified PL/SQL block when a triggering event occurs on a table  
+* The trigger is said to be created on or defined on the item, which is either a **table**, a **view**, a **schema**, or the **database**  
+* Triggering event (DML (data manipulation language) statments) may be on `INSERT`, `UPDATE` or `DELETE`  
+
+&emsp;`CREATE OR REPLACE TRIGGER` trigger_name  
+&emsp;`BEFORE INSERT OR UPDATE OR DELETE`  
+&emsp;&emsp;`OF` attribute  
+&emsp;&emsp;`ON` table_name  
+&emsp;`FOR EACH ROW`  
+&emsp;&emsp;`WHEN (`condition`)`   
+&emsp;`DECLARE`  
+&emsp;&emsp;`-- declaration of local variables`  
+&emsp;`BEGIN`  
+&emsp;&emsp;`-- trigger body, examples:`  
+
+&emsp;&emsp;`IF INSERTING THEN`  
+&emsp;&emsp;&emsp;`-- executed only when inserting`  
+&emsp;&emsp;`ELSEIF DELETING THEN`  
+&emsp;&emsp;&emsp;` -- executed only when deleting`  
+&emsp;&emsp;`END IF;`  
+
+&emsp;&emsp;`INSERT INTO` table_name_used_for_audit`(`col_name1`,`col_name2`,...)`  
+&emsp;&emsp;`VALUES(`'some string'`, :OLD.`attribute_name`, :NEW.`attribute_name`, SYSDATE, SYSTIMESTAMP,` 'row updated by: ' `|| USER);`  
+
+&emsp;&emsp;`NULL; -- placeholder statement if no action is needed`  
+
+&emsp;`END;`  
+&emsp;`/`  
+* `OF` attribute is optional - may be on an entire table  
+* `FOR EACH ROW`: (row level triggers) runs once **for each affected row** can be replaced with `FOR EACH STATEMENT`: (statement level triggers) runs once **for each triggering DML statement**  
+* `WHEN` is optional  
+* `DECLARE` of local variables is optional  
+* `:OLD.attribute` refers to old value, `:NEW.attribute` refers to new value, note this refers to values of columns for currently processed rows in row-level triggers, but refer to pseudorecords for statement-level triggers and instead will return the 1st affected row (:new / :old contain entire set of rows affected)  
+* `:OLD` values cannot be referred when inserting a record, `:NEW` values cannot be referred when deleting a record - Does not exist  
+* `:=` is used for assignment, `=` is used for comparison  
+* Direct **blocking of events** is not possible, however you can raise an exception which causes the entire transaction including the DML operation (such as insert) to be rolled back e.g.:  
+&emsp;`IF` some_condition `THEN`  
+&emsp;&emsp;`RAISE_APPLICATION_ERROR(`number_error_code`,`varchar2_error_message`)`  
+&emsp;`END IF;`  
+Alternatively, use `AFTER` EVENT, and (after checking some condition (and maybe setting a flag)) `ROLLBACK;`  
 
 
 [⬆ Table of Contents ⬆](#oracle-notes)    
