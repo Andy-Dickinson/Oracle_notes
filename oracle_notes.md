@@ -291,7 +291,7 @@ Oracle, object-oriented models and object-relational models allow for composite 
 * `SCOPE IS` is used to restrict the references to point at the **actual object table**. Without this, the reference can be any table of the TYPE  
 * [See declaring types with a reference field](#declaring-types-with-a-reference-field) to create reference types  
 * For object-relational model where there are complex object types and relationships between them (inheritance, subtype relationships, or multiple levels of composition), using `REF` may be more appropriate than the foreign key constraint as it provides a more natural representation of these relationships  
-* `REF` **does not enforce referential integrity directly** (like foreign key does). It is up to the application or database logic to ensure that the references stored in the `REF` column are valid  
+* `REF` **does not enforce referential integrity directly** ([like foreign key do](#constraint-types)). It is up to the application or database logic to ensure that the references stored in the `REF` column are valid  
 * `REF` **does not have built-in support for cascading actions**. Any cascading behavior must be implemented manually using triggers or application logic  
 * `REF` **allows** you to **query related data across tables** and **insert data** ([see functions below](#ref-function)). While with foreign keys, `JOIN` would typically be used  
 * Access value tuples of a reference field using [deref() function](#deref-function) - However use **dot notation** and NOT `deref()` when accessing **<u>specific</u> parts** of a tuple  
@@ -340,7 +340,7 @@ OPTION`;`
   * `DROP`  
 &emsp;&emsp;`COLUMN` column_name - drop column  
 &emsp;&emsp;`PRIMARY KEY` - remove primary key  
-&emsp;&emsp;`CONSTRAINT` constraint_name - remove constraint (including forign key)  
+&emsp;&emsp;`CONSTRAINT` constraint_name - remove constraint (including foreign key)  
   * `ENABLE CONSTRAINT` constraint_name - enable constraint  
   * `DISABLE CONSTRAINT` constraint_name - disable constraint  
 
@@ -359,6 +359,7 @@ OPTION`;`
 `PRIMARY KEY` - combines `NOT NULL` constraint and `UNIQUE` constraint  
 `REFERENCES` Table_name`(`Attribute`)` - (foreign key) requires values in one table to match the ones specified in another table  
 &emsp;&emsp;If naming foreign key constraint, must use `CONSTRAINT` and `FOREIGN KEY` keywords ([see below](#using-constraints))  
+&emsp;&emsp;Can use `REF` instead of `REFERENCES` to behave similar (but not identical) to foreign keys ([see create tables with reference columns](#create-tables-with-reference-columns))  
 `CHECK (`Condition_or_query`)` - value must comply with specified condition. Can be chained with other conditions of queries using `AND` / `OR`  
 `DEFAULT '`value`'` - provides a default value  
 
